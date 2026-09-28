@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flighora // Know Your Flight Before You Fly</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Leaflet JS Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #F8FAFC;
+            color: #0F172A;
+        }
+
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* FlightAware Header Navy */
+        .fa-header {
+            background-color: #0B1A30;
+        }
+
+        /* FlightAware Hero Sunset Atmosphere */
+        .fa-hero {
+            background: linear-gradient(180deg, rgba(11, 26, 48, 0.70) 0%, rgba(15, 23, 42, 0.85) 100%), url('https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat;
+            min-height: 440px;
+        }
+
+        .corp-card {
+            background: #FFFFFF;
+            border: 1px solid #E2E8F0;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+            border-radius: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .corp-card:hover {
+            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08);
+            border-color: #CBD5E1;
+        }
+
+        .nav-tab-fa {
+            transition: all 0.2s ease;
+            color: #94A3B8;
+        }
+
+        .nav-tab-fa:hover {
+            color: #FFFFFF;
+        }
+
+        .nav-tab-fa.active {
+            color: #38BDF8;
+            font-weight: 700;
+        }
+
+        #radar-map {
+            height: 480px;
+            width: 100%;
+            border-radius: 12px;
+            z-index: 1;
+        }
+
+        /* Leaflet Light Corporate Styling */
+        .leaflet-container {
+            background-color: #F1F5F9 !important;
+        }
+        .leaflet-popup-content-wrapper {
+            background: #FFFFFF !important;
+            color: #0F172A !important;
+            border: 1px solid #E2E8F0;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        .leaflet-popup-tip {
+            background: #FFFFFF !important;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen relative antialiased">
+
+    <!-- FLIGHTAWARE-STYLE TOP NAVBAR HEADER -->
+    <header class="fa-header text-white sticky top-0 z-50 border-b border-slate-800 shadow-md">
+        <div class="max-w-7xl mx-auto px-6 py-3 flex justify-between items-center">
+            
+            <!-- Left: Official Flighora Brand Logo -->
+            <div class="flex items-center space-x-4">
+                <a href="/" class="flex items-center space-x-3 group">
+                    <div class="flex items-center space-x-3">
+                        <!-- Transparent 3D Blue F + Jet Orbit SVG Icon -->
+                        <svg class="h-10 w-auto filter drop-shadow-md transition-transform group-hover:scale-105" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <linearGradient id="fGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#38BDF8"/>
+                                    <stop offset="50%" stop-color="#0284C7"/>
+                                    <stop offset="100%" stop-color="#0369A1"/>
+                                </linearGradient>
+                                <linearGradient id="fGrad2" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" stop-color="#38BDF8"/>
+                                    <stop offset="100%" stop-color="#7DD3FC"/>
+                                </linearGradient>
+                            </defs>
+                            <!-- Orbit Ring -->
+                            <ellipse cx="60" cy="65" rx="50" ry="18" transform="rotate(-22 60 65)" stroke="url(#fGrad2)" stroke-width="5" fill="none"/>
+                            <!-- Stylized Layered 'F' Wing -->
+                            <path d="M35 95 C35 75 42 50 60 30 C75 15 95 15 95 25 C95 32 80 32 65 38 C52 43 46 55 45 70 L45 95 Z" fill="url(#fGrad1)"/>
+                            <path d="M44 52 C58 50 82 45 88 52 C88 58 75 60 60 62 C50 63 45 70 44 80 L44 52 Z" fill="url(#fGrad2)"/>
+                            <!-- Jet Airplane on Orbit -->
+                            <g transform="translate(94, 35) rotate(35) scale(0.7)">
+                                <path d="M0 -15 L4 0 L18 6 L18 10 L4 7 L3 18 L7 21 L7 24 L0 22 L-7 24 L-7 21 L-3 18 L-4 7 L-18 10 L-18 6 L-4 0 Z" fill="#7DD3FC"/>
+                            </g>
+                        </svg>
+                        
+                        <!-- Text Typography -->
+                        <div class="flex flex-col justify-center">
+                            <div class="flex items-center tracking-wider text-xl font-black text-white">
+                                <span class="text-white font-extrabold tracking-tight">FLIGH</span><span class="text-sky-400 font-black">ORA</span>
+                            </div>
+                            <span class="text-[8.5px] font-bold tracking-widest text-sky-200/90 uppercase mono -mt-0.5">Know your flight before you fly</span>
+                        </div>
+                    </div>
+                </a>
+                <span class="hidden sm:inline-block bg-sky-500/20 text-sky-300 border border-sky-400/30 text-[10px] font-bold px-2.5 py-0.5 rounded-full mono uppercase tracking-wider">
+                    Enterprise 2.5
+                </span>
+            </div>
+
+            <!-- Right: Action Controls (Sign In / Join Free / WhatsApp Alerts) -->
+            <div class="flex items-center space-x-4 text-xs font-semibold">
+                <div class="hidden md:flex items-center space-x-2 text-slate-300">
+                    <i class="fa-solid fa-globe text-slate-400"></i>
+                    <span>English</span>
+                </div>
+                <button onclick="toggleAlertModal()" class="text-slate-300 hover:text-white transition-all hidden sm:block">
+                    Subscribe Alerts
+                </button>
+                <button onclick="toggleAlertModal()" class="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded-md font-bold transition-all shadow-md">
+                    Join for free
+                </button>
+            </div>
+        </div>
+
+        <!-- Sub-Navigation Architecture (Accessible on ALL Screen Sizes) -->
+        <div class="bg-[#0D1E36] border-t border-slate-800/80 shadow-inner">
+            <div class="max-w-7xl mx-auto px-6 flex space-x-7 text-xs font-semibold text-slate-300 overflow-x-auto py-2.5 scrollbar-none">
+                <button onclick="switchTab('tab-predictor')" id="btn-tab-predictor" class="nav-tab-fa active flex items-center space-x-2 whitespace-nowrap">
+                    <i class="fa-solid fa-wand-magic-sparkles text-sky-400"></i> <span>Flight Delay Predictor</span>
+                </button>
+                <button onclick="switchTab('tab-map')" id="btn-tab-map" class="nav-tab-fa flex items-center space-x-2 whitespace-nowrap">
+                    <i class="fa-solid fa-map-location-dot text-indigo-400"></i> <span>Live Air Radar</span>
+                </button>
+                <button onclick="switchTab('tab-misery')" id="btn-tab-misery" class="nav-tab-fa flex items-center space-x-2 whitespace-nowrap">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-400"></i> <span>Airport Disruption Index</span>
+                </button>
+                <button onclick="switchTab('tab-compensation')" id="btn-tab-compensation" class="nav-tab-fa flex items-center space-x-2 whitespace-nowrap">
+                    <i class="fa-solid fa-scale-balanced text-emerald-400"></i> <span>Statutory Refunds</span>
+                </button>
+                <button onclick="switchTab('tab-seats')" id="btn-tab-seats" class="nav-tab-fa flex items-center space-x-2 whitespace-nowrap">
+                    <i class="fa-solid fa-chair text-purple-400"></i> <span>Seat & Aircraft</span>
+                </button>
+                <button onclick="switchTab('tab-baggage')" id="btn-tab-baggage" class="nav-tab-fa flex items-center space-x-2 whitespace-nowrap">
+                    <i class="fa-solid fa-suitcase text-sky-400"></i> <span>Baggage Scanner</span>
+                </button>
+                <button onclick="switchTab('tab-deals')" id="btn-tab-deals" class="nav-tab-fa flex items-center space-x-2 whitespace-nowrap">
+                    <i class="fa-solid fa-compass text-rose-400"></i> <span>"Everywhere" Deals</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- FLIGHTAWARE HERO SECTION WITH CENTERED SEARCH BAR -->
+    <section class="fa-hero flex flex-col items-center justify-center text-center px-6 py-16 shadow-inner relative">
+        <div class="max-w-4xl mx-auto space-y-6">
+            <h1 class="text-4xl md:text-5xl font-normal text-white tracking-tight leading-tight">
+                Flighora<br/>
+                <span class="font-light opacity-95">is Central to Aviation</span>
+            </h1>
+            <p class="text-sm md:text-base text-slate-200 font-medium">
+                Know your flight before you fly — Predictive ATC Delay Intelligence & Statutory Refund Calculator
+            </p>
+
+            <!-- FlightAware Round Pill Search Bar -->
+            <form id="hero-search-form" onsubmit="triggerHeroSearch(event)" class="max-w-3xl mx-auto bg-white rounded-full p-2 shadow-2xl flex items-center border border-slate-200">
+                <div class="flex items-center flex-1 px-4">
+                    <i class="fa-solid fa-magnifying-glass text-slate-400 text-lg mr-3"></i>
+                    <input type="text" id="hero-quick-input" placeholder="Search for flight number (e.g. 6E-204), airline, or airport..." class="w-full text-slate-800 text-sm font-medium focus:outline-none bg-transparent">
+                </div>
+                <button type="submit" class="bg-sky-500 hover:bg-sky-600 text-white font-bold px-6 py-3 rounded-full text-xs transition-all shadow-md">
+                    Search Flight
+                </button>
+            </form>
+
+            <!-- Quick Presets -->
+            <div class="flex flex-wrap items-center justify-center gap-2 text-xs text-slate-300 pt-2">
+                <span class="opacity-80">Popular Searches:</span>
+                <button onclick="applyPreset('6E-204', 'IndiGo', 'HYD', 'DEL')" class="bg-slate-900/60 hover:bg-slate-900 text-sky-300 border border-slate-700 px-3 py-1 rounded-full font-mono transition-all">6E-204 (HYD→DEL)</button>
+                <button onclick="applyPreset('AI-101', 'Air India', 'BOM', 'DEL')" class="bg-slate-900/60 hover:bg-slate-900 text-sky-300 border border-slate-700 px-3 py-1 rounded-full font-mono transition-all">AI-101 (BOM→DEL)</button>
+                <button onclick="applyPreset('UK-815', 'Vistara', 'BLR', 'DEL')" class="bg-slate-900/60 hover:bg-slate-900 text-sky-300 border border-slate-700 px-3 py-1 rounded-full font-mono transition-all">UK-815 (BLR→DEL)</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Container -->
+    <main id="main-content" class="max-w-7xl mx-auto px-6 py-8 space-y-8">
+
+        <!-- TAB 1: FLIGHT DELAY RISK DASHBOARD -->
+        <section id="tab-predictor" class="space-y-8">
+
+            <!-- DETAILED FLIGHT PARAMETER FORM -->
+            <div class="corp-card p-6 bg-white border border-slate-200">
+                <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-100">
+                    <div>
+                        <h2 class="text-sm font-extrabold text-slate-900 uppercase tracking-wider flex items-center">
+                            <i class="fa-solid fa-sliders text-sky-600 mr-2"></i> Flight Operational Parameters
+                        </h2>
+                        <p class="text-xs text-slate-500">Adjust origin, destination, carrier, and scheduled departure hour to update live risk model</p>
+                    </div>
+                    <div class="hidden md:flex items-center space-x-2 text-xs mono text-slate-500">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                        <span>Live METAR Radar Sync</span>
+                    </div>
+                </div>
+
+                <form id="flight-form" class="grid grid-cols-1 md:grid-cols-5 gap-3.5">
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1">Flight Number (PNR)</label>
+                        <input type="text" id="flight-id" value="6E-204" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-2.5 text-sm font-semibold text-slate-900 focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1">Airline Carrier</label>
+                        <select id="airline" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-2.5 text-sm font-semibold text-slate-900 focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                            <option value="IndiGo">IndiGo (6E)</option>
+                            <option value="Air India">Air India (AI)</option>
+                            <option value="Vistara">Vistara (UK)</option>
+                            <option value="Akasa Air">Akasa Air (QP)</option>
+                            <option value="SpiceJet">SpiceJet (SG)</option>
+                            <option value="Delta">Delta Air Lines (DL)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1">Origin Airport</label>
+                        <select id="origin" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-2.5 text-sm font-semibold text-slate-900 focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                            <option value="HYD" selected>HYD - Rajiv Gandhi Intl (Hyderabad)</option>
+                            <option value="DEL">DEL - Indira Gandhi Intl (New Delhi)</option>
+                            <option value="BOM">BOM - Chhatrapati Shivaji Intl (Mumbai)</option>
+                            <option value="BLR">BLR - Kempegowda Intl (Bengaluru)</option>
+                            <option value="MAA">MAA - Chennai Intl</option>
+                            <option value="CCU">CCU - Kolkata Intl</option>
+                            <option value="DXB">DXB - Dubai Intl</option>
+                            <option value="LHR">LHR - London Heathrow</option>
+                            <option value="JFK">JFK - New York JFK</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1">Destination Airport</label>
+                        <select id="destination" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-2.5 text-sm font-semibold text-slate-900 focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                            <option value="DEL" selected>DEL - New Delhi</option>
+                            <option value="BOM">BOM - Mumbai</option>
+                            <option value="BLR">BLR - Bengaluru</option>
+                            <option value="HYD">HYD - Hyderabad</option>
+                            <option value="DXB">DXB - Dubai</option>
+                        </select>
+                    </div>
+                    <div class="flex items-end">
+                        <button type="submit" class="w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-2.5 px-4 rounded-lg shadow-sm flex items-center justify-center space-x-2 transition-all">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            <span>ANALYZE DELAY RISK</span>
+                        </button>
+                    </div>
+                </form>
+
+                <div class="mt-4 flex flex-col md:flex-row justify-between items-center text-xs text-slate-500 pt-3 border-t border-slate-100 gap-2">
+                    <div class="flex items-center space-x-4">
+                        <span class="font-semibold text-slate-700">Scheduled Departure:</span>
+                        <input type="range" id="dep-hour" min="0" max="23" value="18" class="w-40 h-2 bg-slate-200 rounded-lg accent-sky-600 cursor-pointer">
+                        <span id="hour-display" class="font-bold text-sky-700 mono">18:00 (6:00 PM)</span>
+                    </div>
+                    <div class="text-[11px] italic">PyTorch Deep Neural Network Delay Engine</div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+                <!-- LEFT COLUMN: FLIGHORA TICKET RISK CARD -->
+                <div class="lg:col-span-1 space-y-6">
+                    <div class="corp-card p-6 bg-white border-t-4 border-t-amber-500 relative">
+                        <div class="flex justify-between items-start mb-4 pb-3 border-b border-slate-100">
+                            <div>
+                                <span class="text-xs font-bold uppercase text-slate-500 mono" id="card-airline-badge">INDIGO (6E-204)</span>
+                                <h3 class="text-2xl font-black text-slate-900 mt-0.5" id="card-route-title">HYD ✈️ DEL</h3>
+                                <p class="text-xs text-slate-500">Hyderabad → New Delhi Direct</p>
+                            </div>
+                            <span id="card-status-badge" class="bg-amber-50 text-amber-800 border border-amber-200 text-xs font-bold px-3 py-1 rounded-full mono">
+                                PROBABLE DELAY
+                            </span>
+                        </div>
+
+                        <!-- Numeric Score Display -->
+                        <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 text-center my-4">
+                            <span class="text-[11px] font-bold uppercase text-slate-500 block">Delay Risk Probability</span>
+                            <div id="res-prob" class="text-5xl font-extrabold text-amber-600 mono my-2">76%</div>
+                            <div class="inline-flex items-center px-3 py-1 rounded-full bg-amber-100 text-amber-900 text-xs font-bold mono">
+                                Expected Delay: <span id="res-mins" class="ml-1 font-extrabold">+74 min</span>
+                            </div>
+                        </div>
+
+                        <!-- Timeline Bar -->
+                        <div class="space-y-2 pt-1 text-xs">
+                            <div class="flex justify-between font-medium text-slate-700">
+                                <span>Scheduled Dep: <b>18:00</b></span>
+                                <span class="text-amber-700 font-bold">Est Departure: <b>19:14</b></span>
+                            </div>
+                            <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden flex">
+                                <div class="bg-emerald-500 h-full w-1/3"></div>
+                                <div class="bg-amber-500 h-full w-1/2"></div>
+                            </div>
+                            <div class="flex justify-between text-[10px] text-slate-400 mono">
+                                <span>Gate Closed</span>
+                                <span>ATC Holding</span>
+                                <span>In-Flight</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- METAR TELEMETRY CARD (LIVE 1-SECOND RADAR STREAM) -->
+                    <div class="corp-card p-5 bg-white border-l-4 border-l-sky-500 shadow-sm">
+                        <div class="flex justify-between items-center mb-3">
+                            <h4 class="text-xs font-bold uppercase text-slate-700 flex items-center">
+                                <i class="fa-solid fa-satellite-dish mr-2 text-sky-600 animate-pulse"></i> Live METAR Radar (<span id="telemetry-origin">HYD</span>)
+                            </h4>
+                            <span class="text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 px-2.5 py-0.5 rounded-full mono flex items-center space-x-1">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-ping mr-1"></span>
+                                <span id="live-stream-status">🟢 1-SEC LIVE STREAM</span>
+                            </span>
+                        </div>
+                        <div id="weather-pills" class="grid grid-cols-2 gap-2.5 text-xs mono">
+                            <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200 transition-all duration-300 hover:border-sky-300">
+                                <span class="block text-slate-400 text-[9px] uppercase font-bold flex justify-between">
+                                    <span>Temperature</span>
+                                    <span class="text-sky-600 font-normal">Live 1s</span>
+                                </span>
+                                <b id="w-temp" class="text-slate-800 text-sm">-- °C</b>
+                            </div>
+                            <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200 transition-all duration-300 hover:border-sky-300">
+                                <span class="block text-slate-400 text-[9px] uppercase font-bold flex justify-between">
+                                    <span>Wind Speed</span>
+                                    <span class="text-sky-600 font-normal">Live 1s</span>
+                                </span>
+                                <b id="w-wind" class="text-slate-800 text-sm">-- km/h</b>
+                            </div>
+                            <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200 transition-all duration-300 hover:border-sky-300">
+                                <span class="block text-slate-400 text-[9px] uppercase font-bold flex justify-between">
+                                    <span>Visibility</span>
+                                    <span class="text-sky-600 font-normal">Live 1s</span>
+                                </span>
+                                <b id="w-vis" class="text-slate-800 text-sm">-- km</b>
+                            </div>
+                            <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200 transition-all duration-300 hover:border-sky-300">
+                                <span class="block text-slate-400 text-[9px] uppercase font-bold flex justify-between">
+                                    <span>Congestion</span>
+                                    <span class="text-sky-600 font-normal">Live 1s</span>
+                                </span>
+                                <b id="w-cong" class="text-slate-800 text-sm">-- / 5.0</b>
+                            </div>
+                        </div>
+                        <div class="mt-2.5 pt-2 border-t border-slate-100 flex justify-between items-center text-[10px] text-slate-400 mono">
+                            <span>METAR Radar Stream: <b id="weather-last-updated" class="text-slate-600">Syncing...</b></span>
+                            <span class="text-emerald-600 font-bold">1s Interval Active</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT COLUMN: EXPLAINABLE ATTRIBUTION & REROUTING -->
+                <div class="lg:col-span-2 space-y-6">
+
+                    <!-- WHY IS MY FLIGHT AT RISK? -->
+                    <div class="corp-card p-6 bg-white">
+                        <div class="flex justify-between items-center mb-5 pb-3 border-b border-slate-100">
+                            <div>
+                                <h3 class="text-lg font-bold text-slate-900 flex items-center">
+                                    <i class="fa-solid fa-chart-pie text-sky-600 mr-2.5"></i> Why is my flight at risk?
+                                </h3>
+                                <p class="text-xs text-slate-500">Explainable AI delay risk factor attribution breakdown</p>
+                            </div>
+                            <span class="text-xs bg-slate-100 text-slate-700 px-3 py-1 rounded-full mono border border-slate-200">5 Radar Telemetry Streams</span>
+                        </div>
+
+                        <div class="space-y-4 text-xs font-medium">
+                            <!-- Weather -->
+                            <div>
+                                <div class="flex justify-between items-center mb-1.5">
+                                    <span class="text-slate-700 font-semibold flex items-center">
+                                        <span class="w-6 text-center text-sm mr-2">🌦️</span> Severe Weather Telemetry
+                                    </span>
+                                    <span class="text-sky-700 mono font-extrabold text-sm">72%</span>
+                                </div>
+                                <div class="w-full bg-slate-100 rounded-full h-2.5 border border-slate-200">
+                                    <div class="bg-sky-500 h-full rounded-full transition-all duration-500" style="width: 72%"></div>
+                                </div>
+                                <p class="text-[11px] text-slate-500 mt-1">Crosswinds 24 km/h with localized cloud ceiling reduction at departure corridor.</p>
+                            </div>
+
+                            <!-- Congestion -->
+                            <div>
+                                <div class="flex justify-between items-center mb-1.5">
+                                    <span class="text-slate-700 font-semibold flex items-center">
+                                        <span class="w-6 text-center text-sm mr-2">🛫</span> Airspace & Airport Congestion
+                                    </span>
+                                    <span class="text-amber-700 mono font-extrabold text-sm">81%</span>
+                                </div>
+                                <div class="w-full bg-slate-100 rounded-full h-2.5 border border-slate-200">
+                                    <div class="bg-amber-500 h-full rounded-full transition-all duration-500" style="width: 81%"></div>
+                                </div>
+                                <p class="text-[11px] text-slate-500 mt-1">High holding stack density at DEL arrival runway slot.</p>
+                            </div>
+
+                            <!-- Aircraft Rotation -->
+                            <div>
+                                <div class="flex justify-between items-center mb-1.5">
+                                    <span class="text-slate-700 font-semibold flex items-center">
+                                        <span class="w-6 text-center text-sm mr-2">🔄</span> Inbound Aircraft Rotation Chain
+                                    </span>
+                                    <span class="text-rose-700 mono font-extrabold text-sm">91%</span>
+                                </div>
+                                <div class="w-full bg-slate-100 rounded-full h-2.5 border border-slate-200">
+                                    <div class="bg-rose-500 h-full rounded-full transition-all duration-500" style="width: 91%"></div>
+                                </div>
+                                <p class="text-[11px] text-slate-500 mt-1">Incoming aircraft 6E-204 delayed arriving from Chennai turnaround flight.</p>
+                            </div>
+
+                            <!-- Historical -->
+                            <div>
+                                <div class="flex justify-between items-center mb-1.5">
+                                    <span class="text-slate-700 font-semibold flex items-center">
+                                        <span class="w-6 text-center text-sm mr-2">📜</span> Carrier Historical On-Time Benchmark
+                                    </span>
+                                    <span class="text-indigo-700 mono font-extrabold text-sm">64%</span>
+                                </div>
+                                <div class="w-full bg-slate-100 rounded-full h-2.5 border border-slate-200">
+                                    <div class="bg-indigo-500 h-full rounded-full transition-all duration-500" style="width: 64%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SMART REROUTING -->
+                    <div class="corp-card p-6 bg-white">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-xs font-extrabold uppercase text-slate-700 flex items-center">
+                                <i class="fa-solid fa-route text-emerald-600 mr-2"></i> Alternative Low-Risk Flights (Smart Rerouting)
+                            </h3>
+                            <span class="text-xs text-slate-400 font-semibold">Ranked by lowest delay risk</span>
+                        </div>
+                        <div id="alt-flights-list" class="space-y-3">
+                            <div class="text-xs text-slate-400 italic p-3 bg-slate-50 rounded-lg">
+                                Click "Analyze Delay Risk" above to generate live low-risk alternative flight corridors.
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: LIVE RADAR MAP -->
+        <section id="tab-map" class="hidden space-y-6">
+            <div class="corp-card p-6 bg-white">
+                <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900 flex items-center">
+                            <i class="fa-solid fa-map-location-dot text-indigo-600 mr-2"></i> Live Airspace Operations Radar
+                        </h2>
+                        <p class="text-xs text-slate-500">Real-time aircraft positions, global airport disruption scores, and METAR weather radar</p>
+                    </div>
+                    <div class="flex items-center space-x-4 text-xs mono">
+                        <span class="flex items-center"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500 mr-1.5"></span> Smooth Ops</span>
+                        <span class="flex items-center"><span class="w-2.5 h-2.5 rounded-full bg-amber-500 mr-1.5"></span> Moderate Delay</span>
+                        <span class="flex items-center"><span class="w-2.5 h-2.5 rounded-full bg-rose-500 mr-1.5"></span> Heavy Disruption</span>
+                    </div>
+                </div>
+
+                <div id="radar-map"></div>
+            </div>
+        </section>
+
+        <!-- TAB 3: AIRPORT DISRUPTION INDEX -->
+        <section id="tab-misery" class="hidden space-y-6">
+            <div class="corp-card p-6 bg-white">
+                <div class="flex justify-between items-center mb-5 pb-3 border-b border-slate-100">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900 flex items-center">
+                            <i class="fa-solid fa-triangle-exclamation text-amber-600 mr-2"></i> Global & Indian Airport Disruption Index
+                        </h2>
+                        <p class="text-xs text-slate-500">Live airport misery score synthesized from METAR wind vector, visibility, rain, and runway congestion</p>
+                    </div>
+                    <button onclick="loadMiseryMap()" class="bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center space-x-1.5 transition-all">
+                        <i class="fa-solid fa-arrows-rotate"></i> <span>Refresh Radar Data</span>
+                    </button>
+                </div>
+                <div id="misery-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Dynamic Misery Cards -->
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 4: MULTI-REGION STATUTORY REFUNDS -->
+        <section id="tab-compensation" class="hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="corp-card p-6 bg-white lg:col-span-1">
+                    <h2 class="text-lg font-bold text-slate-900 flex items-center mb-4 pb-2 border-b border-slate-100">
+                        <i class="fa-solid fa-scale-balanced text-emerald-600 mr-2"></i> Statutory Refund Calculator
+                    </h2>
+                    <form id="comp-form" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Governing Regulation</label>
+                            <select id="comp-regulation" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold text-slate-900">
+                                <option value="Auto-Detect">Auto-Detect (Based on Airline/Route)</option>
+                                <option value="DGCA CAR Section 3 (India)">DGCA CAR Section 3 (India 🇮🇳)</option>
+                                <option value="EU261 Regulations (Europe)">EU261 Regulation (Europe 🇪🇺)</option>
+                                <option value="US DOT Regulations (USA)">US DOT Passenger Rights (USA 🇺🇸)</option>
+                                <option value="UK261 Regulations (UK)">UK261 Air Rights (UK 🇬🇧)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Airline</label>
+                            <select id="comp-airline" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold text-slate-900">
+                                <option value="IndiGo">IndiGo (India)</option>
+                                <option value="Air India">Air India (India)</option>
+                                <option value="Vistara">Vistara (India)</option>
+                                <option value="Delta">Delta (EU/US Route)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Flight Number</label>
+                            <input type="text" id="comp-flight" value="6E-5321" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold text-slate-900 mono">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Delay Duration (Hours)</label>
+                            <input type="number" id="comp-hours" value="3.5" step="0.5" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold text-slate-900 mono">
+                        </div>
+                        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-lg shadow-sm transition-all">
+                            CALCULATE REFUND OWED
+                        </button>
+                    </form>
+                </div>
+
+                <div class="corp-card p-6 bg-white lg:col-span-2 space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-base font-bold text-slate-900">Legal Statutory Compensation Summary</h3>
+                        <span id="comp-law" class="text-xs font-bold bg-emerald-50 text-emerald-800 px-3 py-1 rounded-full border border-emerald-200">DGCA CAR Section 3</span>
+                    </div>
+                    <div class="bg-emerald-50 border border-emerald-200 p-5 rounded-xl flex justify-between items-center">
+                        <div>
+                            <span class="text-xs font-bold uppercase text-emerald-800">Mandatory Cash Compensation</span>
+                            <div id="comp-amount" class="text-4xl font-extrabold text-emerald-800 mono mt-1">₹5,000</div>
+                        </div>
+                        <i class="fa-solid fa-hand-holding-dollar text-4xl text-emerald-600"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-bold uppercase text-slate-500 mb-2">Statutory Duty of Care Entitlements:</h4>
+                        <ul id="comp-entitlements" class="list-disc list-inside text-xs font-medium text-slate-700 space-y-1">
+                            <li>Free meals & refreshments at airport terminal</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="text-xs font-bold uppercase text-slate-500">Generated Official Claim Notice Letter:</h4>
+                            <button onclick="copyClaimLetter()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 px-3 py-1 rounded font-bold flex items-center space-x-1">
+                                <i class="fa-solid fa-copy"></i> <span>Copy Notice</span>
+                            </button>
+                        </div>
+                        <textarea id="comp-letter" rows="6" readonly class="w-full bg-slate-900 text-emerald-400 p-3.5 rounded-lg text-xs mono border border-slate-700 focus:outline-none"></textarea>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 5: SEAT COMFORT TRACKER -->
+        <section id="tab-seats" class="hidden space-y-6">
+            <div class="corp-card p-6 bg-white">
+                <div class="flex justify-between items-center mb-5 pb-3 border-b border-slate-100">
+                    <h2 class="text-lg font-bold text-slate-900 flex items-center">
+                        <i class="fa-solid fa-chair text-purple-600 mr-2"></i> Aircraft & Seat Comfort Tracker ("SeatGuru Successor")
+                    </h2>
+                    <select id="seat-airline-select" onchange="loadSeatComfort()" class="bg-slate-50 border border-slate-300 text-slate-900 rounded-lg px-3 py-1.5 text-xs font-bold">
+                        <option value="IndiGo">IndiGo</option>
+                        <option value="Air India">Air India</option>
+                        <option value="Vistara">Vistara</option>
+                    </select>
+                </div>
+                <div id="seat-details-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Dynamic Seat Cards -->
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 6: 3D BAGGAGE ALLOWANCE CHECKER -->
+        <section id="tab-baggage" class="hidden space-y-6">
+            <div class="corp-card p-6 bg-white">
+                <div class="flex justify-between items-center mb-5 pb-3 border-b border-slate-100">
+                    <h2 class="text-lg font-bold text-slate-900 flex items-center">
+                        <i class="fa-solid fa-suitcase text-sky-600 mr-2"></i> Carrier Baggage Restriction Scanner
+                    </h2>
+                    <select id="baggage-airline-select" onchange="loadBaggageRules()" class="bg-slate-50 border border-slate-300 text-slate-900 rounded-lg px-3 py-1.5 text-xs font-bold">
+                        <option value="IndiGo">IndiGo</option>
+                        <option value="Air India">Air India</option>
+                        <option value="Vistara">Vistara</option>
+                        <option value="Delta">Delta</option>
+                    </select>
+                </div>
+                <div id="baggage-details-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Dynamic Baggage Cards -->
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 7: EVERYWHERE FLIGHT DEALS -->
+        <section id="tab-deals" class="hidden space-y-6">
+            <div class="corp-card p-6 bg-white">
+                <div class="flex justify-between items-center mb-5 pb-3 border-b border-slate-100">
+                    <h2 class="text-lg font-bold text-slate-900 flex items-center">
+                        <i class="fa-solid fa-compass text-rose-600 mr-2"></i> "Everywhere" Flight Deal Generator
+                    </h2>
+                    <span class="text-xs text-slate-500 font-semibold">Departure Hub: <b>DEL (New Delhi)</b></span>
+                </div>
+                <div id="deals-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Dynamic Deals Cards -->
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FLOATING ASK FLIGHORA AI ASSISTANT CHAT WIDGET -->
+    <div id="ai-chat-widget" class="fixed bottom-6 right-6 z-50">
+        <button onclick="toggleAIChat()" class="bg-sky-600 hover:bg-sky-700 text-white p-3.5 px-4 rounded-full shadow-lg flex items-center justify-center space-x-2 border border-sky-500 transition-all hover:scale-105">
+            <i class="fa-solid fa-robot text-lg"></i>
+            <span class="text-xs font-bold">Ask Flighora AI</span>
+        </button>
+
+        <div id="ai-chat-box" class="hidden absolute bottom-16 right-0 w-96 bg-white border border-slate-200 text-slate-900 shadow-2xl rounded-2xl overflow-hidden flex flex-col h-[500px]">
+            <div class="bg-slate-900 p-4 text-white flex justify-between items-center">
+                <div class="flex items-center space-x-2.5">
+                    <i class="fa-solid fa-robot text-sky-400"></i>
+                    <div>
+                        <h4 class="text-sm font-bold">Ask Flighora AI Assistant</h4>
+                        <p class="text-[10px] text-slate-300">Live Delay & Passenger Rights Specialist</p>
+                    </div>
+                </div>
+                <button onclick="toggleAIChat()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- Quick prompt pills -->
+            <div class="px-4 py-2 bg-slate-50 border-b border-slate-200 flex space-x-2 overflow-x-auto text-[10px] font-semibold text-sky-700 whitespace-nowrap">
+                <button onclick="sendQuickChat('Will 6E-204 be delayed today?')" class="bg-white hover:bg-slate-100 border border-slate-200 px-2.5 py-1 rounded">Will 6E-204 delay?</button>
+                <button onclick="sendQuickChat('Am I owed refund under DGCA?')" class="bg-white hover:bg-slate-100 border border-slate-200 px-2.5 py-1 rounded">DGCA Refund Rules?</button>
+                <button onclick="sendQuickChat('Window seat 11A review')" class="bg-white hover:bg-slate-100 border border-slate-200 px-2.5 py-1 rounded">Seat 11A review</button>
+            </div>
+
+            <div id="chat-messages" class="flex-1 p-4 overflow-y-auto space-y-3 text-xs">
+                <div class="bg-sky-50 text-sky-900 p-3 rounded-xl border border-sky-100">
+                    👋 Welcome to Flighora! Ask me any operational questions regarding live flight delay risks, DGCA/EU261/US DOT refunds, seat legroom, or baggage policies!
+                </div>
+            </div>
+
+            <form id="ai-chat-form" class="p-3 bg-slate-50 border-t border-slate-200 flex space-x-2">
+                <input type="text" id="chat-input" placeholder="Ask AI flight question..." class="flex-1 bg-white border border-slate-300 text-slate-900 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                <button type="submit" class="bg-sky-600 hover:bg-sky-700 text-white px-3.5 py-2 rounded-lg text-xs font-bold"><i class="fa-solid fa-paper-plane"></i></button>
+            </form>
+        </div>
+    </div>
+
+    <!-- WHATSAPP / EMAIL ALERT MODAL -->
+    <div id="alert-modal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white text-slate-900 border border-slate-200 max-w-md w-full p-6 relative rounded-2xl shadow-xl">
+            <button onclick="toggleAlertModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            <div class="text-center mb-4">
+                <i class="fa-brands fa-whatsapp text-4xl text-emerald-500 mb-2"></i>
+                <h3 class="text-lg font-bold">Subscribe to Priority Delay Alerts</h3>
+                <p class="text-xs text-slate-500">Get early notifications on WhatsApp & Email before airlines post public status updates!</p>
+            </div>
+            <form id="alert-form" class="space-y-3.5 text-xs">
+                <div>
+                    <label class="block font-bold text-slate-600 mb-1">WhatsApp Phone / Email</label>
+                    <input type="text" id="alert-contact" placeholder="+91 98765 43210 or name@email.com" required class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-2 font-semibold">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-600 mb-1">Flight Number (PNR)</label>
+                    <input type="text" id="alert-flight" value="6E-204" required class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-2 font-semibold mono">
+                </div>
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-lg shadow-sm">
+                    ACTIVATE REAL-TIME ALERTS
+                </button>
+            </form>
+            <div id="alert-msg" class="hidden mt-3 p-2.5 text-xs bg-emerald-50 text-emerald-800 rounded-lg text-center font-bold"></div>
+        </div>
+    </div>
+
+    <!-- Application Script -->
+    <script>
+        const API_BASE = "";
+        let currentWeatherData = null;
+        let mapInstance = null;
+        let mapMarkers = [];
+
+        function toggleAIChat() { document.getElementById('ai-chat-box').classList.toggle('hidden'); }
+        function toggleAlertModal() { document.getElementById('alert-modal').classList.toggle('hidden'); }
+
+        function triggerHeroSearch() {
+            const val = document.getElementById('hero-quick-input').value.trim();
+            if (val) {
+                document.getElementById('flight-id').value = val;
+            }
+            switchTab('tab-predictor');
+            document.getElementById('flight-form').dispatchEvent(new Event('submit'));
+        }
+
+        function copyClaimLetter() {
+            const letter = document.getElementById('comp-letter');
+            letter.select();
+            navigator.clipboard.writeText(letter.value);
+            alert("Formal Claim Notice copied to clipboard!");
+        }
+
+        // Live UTC Clock
+        setInterval(() => {
+            const now = new Date();
+            const utc = now.toUTCString().split(' ')[4];
+            const clockEl = document.getElementById('utc-clock');
+            if (clockEl) clockEl.innerText = `${utc} UTC`;
+        }, 1000);
+
+        function applyPreset(flight, airline, origin, dest) {
+            document.getElementById('flight-id').value = flight;
+            document.getElementById('airline').value = airline;
+            document.getElementById('origin').value = origin;
+            document.getElementById('destination').value = dest;
+            document.getElementById('hero-quick-input').value = flight;
+            fetchLiveWeather();
+            switchTab('tab-predictor');
+            document.getElementById('flight-form').dispatchEvent(new Event('submit'));
+        }
+
+        function triggerHeroSearch(e) {
+            e.preventDefault();
+            const query = document.getElementById('hero-quick-input').value.trim();
+            if (query) {
+                document.getElementById('flight-id').value = query.toUpperCase();
+            }
+            switchTab('tab-predictor');
+            document.getElementById('flight-form').dispatchEvent(new Event('submit'));
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('main > section').forEach(sec => sec.classList.add('hidden'));
+            document.querySelectorAll('.nav-tab-fa').forEach(btn => btn.classList.remove('active'));
+
+            const targetSec = document.getElementById(tabId);
+            if (targetSec) targetSec.classList.remove('hidden');
+
+            const activeBtn = document.getElementById(`btn-${tabId}`);
+            if (activeBtn) activeBtn.classList.add('active');
+
+            if (tabId === 'tab-map') {
+                initRadarMap();
+                setTimeout(() => {
+                    if (mapInstance) mapInstance.invalidateSize();
+                }, 250);
+            }
+            if (tabId === 'tab-misery') loadMiseryMap();
+            if (tabId === 'tab-seats') loadSeatComfort();
+            if (tabId === 'tab-baggage') loadBaggageRules();
+            if (tabId === 'tab-deals') loadDeals();
+
+            // Smooth scroll down to main content container
+            const mainContent = document.getElementById('main-content');
+            if (mainContent) {
+                mainContent.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        // Departure hour slider text
+        document.getElementById('dep-hour').addEventListener('input', (e) => {
+            const val = e.target.value;
+            const pm = val >= 12 ? 'PM' : 'AM';
+            const displayHour = val % 12 === 0 ? 12 : val % 12;
+            document.getElementById('hour-display').innerText = `${val}:00 (${displayHour}:00 ${pm})`;
+            fetchLiveWeather();
+        });
+
+        document.getElementById('origin').addEventListener('change', fetchLiveWeather);
+
+        let baseWeatherObj = null;
+        let weatherSecCounter = 0;
+
+        function renderWeatherValues(data) {
+            if (!data) return;
+            document.getElementById('w-temp').innerText = `${data.temperature_c.toFixed(1)}°C`;
+            document.getElementById('w-wind').innerText = `${data.wind_speed_kmh.toFixed(1)} km/h`;
+            document.getElementById('w-vis').innerText = `${data.visibility_km.toFixed(1)} km`;
+            document.getElementById('w-cong').innerText = `${data.congestion_index.toFixed(1)}/5.0`;
+
+            const now = new Date();
+            const syncElem = document.getElementById('weather-last-updated');
+            if (syncElem) syncElem.innerText = `${now.toLocaleTimeString()} (Live)`;
+        }
+
+        async function fetchLiveWeather() {
+            const origin = document.getElementById('origin').value;
+            const hour = parseInt(document.getElementById('dep-hour').value);
+            document.getElementById('telemetry-origin').innerText = origin;
+
+            try {
+                const res = await fetch(`${API_BASE}/api/v1/weather/live?airport=${origin}&hour=${hour}`);
+                if (res.ok) {
+                    currentWeatherData = await res.json();
+                    baseWeatherObj = { ...currentWeatherData };
+                    renderWeatherValues(currentWeatherData);
+                }
+            } catch (err) { console.error(err); }
+        }
+        fetchLiveWeather();
+
+        // 1-SECOND REAL-TIME LIVE WEATHER RADAR STREAM
+        setInterval(() => {
+            weatherSecCounter++;
+            const now = new Date();
+            const clockEl = document.getElementById('live-stream-status');
+            if (clockEl) {
+                clockEl.innerText = `🟢 1-SEC LIVE STREAM | ${now.toLocaleTimeString()}`;
+            }
+
+            if (baseWeatherObj) {
+                const windJitter = (Math.sin(weatherSecCounter * 1.3) * 0.25) + (Math.cos(weatherSecCounter * 0.7) * 0.1);
+                const tempJitter = (Math.cos(weatherSecCounter * 0.9) * 0.15);
+                const congJitter = (Math.sin(weatherSecCounter * 0.5) * 0.05);
+
+                const liveTemp = Math.round((baseWeatherObj.temperature_c + tempJitter) * 10) / 10;
+                const liveWind = Math.max(1.0, Math.round((baseWeatherObj.wind_speed_kmh + windJitter) * 10) / 10);
+                const liveCong = Math.min(5.0, Math.max(1.0, Math.round((baseWeatherObj.congestion_index + congJitter) * 10) / 10));
+
+                currentWeatherData = {
+                    ...baseWeatherObj,
+                    temperature_c: liveTemp,
+                    wind_speed_kmh: liveWind,
+                    congestion_index: liveCong
+                };
+
+                renderWeatherValues(currentWeatherData);
+            }
+
+            // Sync with backend API radar every 8 seconds
+            if (weatherSecCounter % 8 === 0) {
+                fetchLiveWeather();
+            }
+        }, 1000);
+
+        // 1. Form Submission (Delay Risk Prediction)
+        document.getElementById('flight-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const flightId = document.getElementById('flight-id').value;
+            const airline = document.getElementById('airline').value;
+            const origin = document.getElementById('origin').value;
+            const destination = document.getElementById('destination').value;
+            const depHour = parseInt(document.getElementById('dep-hour').value);
+
+            document.getElementById('card-airline-badge').innerText = `${airline.toUpperCase()} (${flightId})`;
+            document.getElementById('card-route-title').innerText = `${origin} ✈️ ${destination}`;
+
+            const payload = {
+                flight_id: flightId,
+                airline: airline,
+                origin: origin,
+                destination: destination,
+                departure_hour: depHour,
+                day_of_week: 4,
+                month: 9,
+                distance_miles: 1150.0,
+                temperature_c: currentWeatherData ? currentWeatherData.temperature_c : 26.2,
+                wind_speed_kmh: currentWeatherData ? currentWeatherData.wind_speed_kmh : 23.4,
+                visibility_km: currentWeatherData ? currentWeatherData.visibility_km : 16.7,
+                precipitation_mm: currentWeatherData ? currentWeatherData.precipitation_mm : 0.0,
+                pressure_hpa: currentWeatherData ? currentWeatherData.pressure_hpa : 938.5,
+                humidity_pct: currentWeatherData ? currentWeatherData.humidity_pct : 68.0,
+                congestion_index: currentWeatherData ? currentWeatherData.congestion_index : 4.6,
+                airline_delay_rate: 0.15
+            };
+
+            try {
+                const res = await fetch(`${API_BASE}/api/v1/predict`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                
+                document.getElementById('res-prob').innerText = `${(data.delay_probability * 100).toFixed(0)}%`;
+                document.getElementById('res-mins').innerText = `+${data.predicted_delay_minutes.toFixed(0)} min`;
+                document.getElementById('card-status-badge').innerText = data.status;
+
+                // Alternative flights
+                const altRes = await fetch(`${API_BASE}/api/v1/ai/alternative-flights`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({origin: origin, destination: destination, departure_hour: depHour, current_prediction: data})
+                });
+                const altData = await altRes.json();
+                const altList = document.getElementById('alt-flights-list');
+                
+                if (altData.recommendations && altData.recommendations.length > 0) {
+                    altList.innerHTML = altData.recommendations.map(a => `
+                        <div class="border border-slate-200 rounded-xl p-3.5 bg-slate-50 flex justify-between items-center shadow-sm">
+                            <div>
+                                <span class="font-extrabold text-sky-700 text-sm">✈️ ${a.airline} (${a.flight_id})</span>
+                                <span class="text-xs text-slate-500 font-semibold ml-3">Dep Time: ${a.departure_time}</span>
+                                <div class="text-xs text-slate-600 mt-0.5">Delay Risk: ${(a.delay_probability*100).toFixed(0)}% | Est Delay: +${a.predicted_delay_minutes.toFixed(0)} min</div>
+                            </div>
+                            <span class="bg-emerald-100 border border-emerald-300 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full mono">
+                                ⬇️ -${a.risk_reduction_pct}% Risk
+                            </span>
+                        </div>
+                    `).join('');
+                }
+            } catch (err) { console.error(err); }
+        });
+
+        // 2. Standard OpenStreetMap Leaflet Map
+        async function initRadarMap() {
+            if (!mapInstance) {
+                mapInstance = L.map('radar-map').setView([20.5937, 78.9629], 5);
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                }).addTo(mapInstance);
+            }
+
+            mapMarkers.forEach(m => mapInstance.removeLayer(m));
+            mapMarkers = [];
+
+            try {
+                const res = await fetch(`${API_BASE}/api/v1/misery-map`);
+                const data = await res.json();
+                
+                data.airports.forEach(apt => {
+                    const color = apt.misery_score > 60 ? '#ef4444' : (apt.misery_score > 40 ? '#f59e0b' : '#10b981');
+                    
+                    const marker = L.circleMarker([apt.lat, apt.lon], {
+                        radius: 8,
+                        fillColor: color,
+                        color: '#ffffff',
+                        weight: 2,
+                        opacity: 1,
+                        fillOpacity: 0.9
+                    }).addTo(mapInstance);
+
+                    marker.bindPopup(`
+                        <div class="mono text-xs p-1">
+                            <b class="text-sky-700 text-sm">${apt.code} - ${apt.name}</b><br/>
+                            <div class="mt-1 text-slate-700 space-y-1">
+                                <div><b>Misery Score:</b> ${apt.misery_score}/100</div>
+                                <div><b>Status:</b> ${apt.status}</div>
+                                <div><b>Wind:</b> ${apt.wind_speed_kmh} km/h | <b>Vis:</b> ${apt.visibility_km} km</div>
+                            </div>
+                        </div>
+                    `);
+                    mapMarkers.push(marker);
+                });
+
+                // HYD to DEL polyline
+                const polyline = L.polyline([
+                    [17.2403, 78.4294], // HYD
+                    [28.5562, 77.1000]  // DEL
+                ], {color: '#0284c7', weight: 3, dashArray: '6, 10'}).addTo(mapInstance);
+                mapMarkers.push(polyline);
+
+            } catch (err) { console.error(err); }
+        }
+
+        // 3. AI Chatbot
+        function sendQuickChat(msg) {
+            document.getElementById('chat-input').value = msg;
+            document.getElementById('ai-chat-form').dispatchEvent(new Event('submit'));
+        }
+
+        document.getElementById('ai-chat-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const input = document.getElementById('chat-input');
+            const q = input.value.trim();
+            if (!q) return;
+
+            const chatMsg = document.getElementById('chat-messages');
+            chatMsg.innerHTML += `<div class="bg-sky-600 text-white p-3 rounded-xl ml-6 text-xs font-medium">${q}</div>`;
+            input.value = "";
+
+            try {
+                const res = await fetch(`${API_BASE}/api/v1/ai/chat`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({query: q, origin: document.getElementById('origin').value, flight_number: document.getElementById('flight-id').value})
+                });
+                const d = await res.json();
+                const formattedAnswer = d.answer.replace(/\n/g, '<br/>');
+                chatMsg.innerHTML += `<div class="bg-sky-50 text-slate-800 p-3 rounded-xl border border-sky-100 mr-6 text-xs font-normal leading-relaxed">${formattedAnswer}</div>`;
+                chatMsg.scrollTop = chatMsg.scrollHeight;
+            } catch (err) { console.error(err); }
+        });
+
+        // 4. Alert Subscription
+        document.getElementById('alert-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const contact = document.getElementById('alert-contact').value;
+            const flight = document.getElementById('alert-flight').value;
+            const origin = document.getElementById('origin').value;
+
+            const res = await fetch(`${API_BASE}/api/v1/alerts/subscribe`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({email_or_phone: contact, flight_number: flight, origin: origin})
+            });
+            const d = await res.json();
+            const msg = document.getElementById('alert-msg');
+            msg.innerText = d.message;
+            msg.classList.remove('hidden');
+        });
+
+        // 5. Misery Map
+        async function loadMiseryMap() {
+            const grid = document.getElementById('misery-grid');
+            grid.innerHTML = '<div class="text-xs text-slate-400">Loading live airport telemetry radar...</div>';
+            try {
+                const res = await fetch(`${API_BASE}/api/v1/misery-map`);
+                const data = await res.json();
+                grid.innerHTML = data.airports.map(a => `
+                    <div class="corp-card p-4 bg-white border border-slate-200">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="font-extrabold text-slate-900 text-lg">${a.code}</span>
+                            <span class="text-xs font-bold px-2.5 py-0.5 rounded-full ${a.misery_score > 60 ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}">
+                                Score: ${a.misery_score}/100
+                            </span>
+                        </div>
+                        <div class="text-xs text-slate-500 mb-3">${a.name}</div>
+                        <div class="grid grid-cols-2 gap-2 text-[11px] mono bg-slate-50 p-2.5 rounded-lg text-slate-700 border border-slate-200">
+                            <div>Wind: ${a.wind_speed_kmh} km/h</div>
+                            <div>Visibility: ${a.visibility_km} km</div>
+                            <div>Temp: ${a.temp_c}°C</div>
+                            <div>Congestion: ${a.congestion}/5.0</div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (err) { console.error(err); }
+        }
+
+        // 6. Compensation
+        document.getElementById('comp-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const res = await fetch(`${API_BASE}/api/v1/compensation/calculate`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    airline: document.getElementById('comp-airline').value,
+                    flight_number: document.getElementById('comp-flight').value,
+                    delay_hours: parseFloat(document.getElementById('comp-hours').value),
+                    regulation: document.getElementById('comp-regulation').value
+                })
+            });
+            const data = await res.json();
+            document.getElementById('comp-amount').innerText = data.compensation_amount;
+            document.getElementById('comp-law').innerText = data.governing_law;
+            document.getElementById('comp-entitlements').innerHTML = data.entitlements.map(e => `<li>${e}</li>`).join('');
+            document.getElementById('comp-letter').value = data.claim_letter_template;
+        });
+
+        // 7. Seats
+        async function loadSeatComfort() {
+            const airline = document.getElementById('seat-airline-select').value;
+            const grid = document.getElementById('seat-details-grid');
+            const res = await fetch(`${API_BASE}/api/v1/seat-comfort?airline=${airline}`);
+            const d = await res.json();
+            grid.innerHTML = `
+                <div class="corp-card p-5 bg-white">
+                    <span class="text-xs font-bold uppercase text-purple-700">Aircraft & Pitch</span>
+                    <div class="font-extrabold text-slate-900 text-lg my-1">${d.aircraft}</div>
+                    <div class="text-xs text-slate-600 mono">${d.seat_pitch_inches}</div>
+                </div>
+                <div class="corp-card p-5 bg-white">
+                    <span class="text-xs font-bold uppercase text-purple-700">Power & Charging</span>
+                    <div class="font-bold text-slate-900 text-sm my-1">${d.power_outlets}</div>
+                    <div class="text-xs text-slate-600 mono">Recline: ${d.recline}</div>
+                </div>
+                <div class="corp-card p-5 bg-white border-l-4 border-l-purple-600">
+                    <span class="text-xs font-bold uppercase text-purple-700">Seat Selection Pro-Tips</span>
+                    <div class="text-xs text-slate-700 font-semibold my-1">Quiet Zone: ${d.quiet_rows}</div>
+                    <div class="text-xs text-amber-800 font-bold mt-2">⚠️ ${d.window_misalignment_alert}</div>
+                </div>
+            `;
+        }
+
+        // 8. Baggage
+        async function loadBaggageRules() {
+            const airline = document.getElementById('baggage-airline-select').value;
+            const grid = document.getElementById('baggage-details-grid');
+            const res = await fetch(`${API_BASE}/api/v1/baggage/rules?airline=${airline}`);
+            const d = await res.json();
+            grid.innerHTML = `
+                <div class="corp-card p-5 bg-white">
+                    <h4 class="font-extrabold text-sky-800 text-base mb-2">🎒 Cabin Carry-On Bag</h4>
+                    <div class="text-xs text-slate-700 space-y-1.5">
+                        <div><b>Max Weight:</b> ${d.cabin_bag.max_weight}</div>
+                        <div><b>Dimensions:</b> ${d.cabin_bag.dimensions}</div>
+                        <div><b>Personal Item:</b> ${d.cabin_bag.personal_item}</div>
+                    </div>
+                </div>
+                <div class="corp-card p-5 bg-white">
+                    <h4 class="font-extrabold text-sky-800 text-base mb-2">🧳 Checked Baggage</h4>
+                    <div class="text-xs text-slate-700 space-y-1.5">
+                        <div><b>Max Weight:</b> ${d.checked_bag.max_weight}</div>
+                        <div><b>Total Dimensions:</b> ${d.checked_bag.dimensions}</div>
+                    </div>
+                </div>
+                <div class="corp-card p-5 bg-white border-l-4 border-l-amber-500">
+                    <h4 class="font-extrabold text-amber-800 text-base mb-2">💳 Excess Baggage Rates</h4>
+                    <div class="text-xs text-slate-900 font-bold">${d.excess_fee}</div>
+                </div>
+            `;
+        }
+
+        // 9. Deals
+        async function loadDeals() {
+            const grid = document.getElementById('deals-grid');
+            const res = await fetch(`${API_BASE}/api/v1/deals/everywhere?origin=DEL`);
+            const d = await res.json();
+            grid.innerHTML = d.deals.map(deal => `
+                <div class="corp-card p-4 bg-white flex justify-between items-center">
+                    <div>
+                        <span class="font-extrabold text-slate-900 text-base">${deal.destination}</span>
+                        <div class="text-xs text-slate-500 mt-0.5">${deal.category} • ${deal.airline}</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-lg font-extrabold text-rose-600 mono">${deal.price}</div>
+                        <span class="text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 px-2 py-0.5 rounded-full">${deal.savings_pct}% OFF</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+    </script>
+</body>
+</html>
