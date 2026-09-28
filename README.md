@@ -4,6 +4,25 @@ An AI-powered prediction and decision support platform for flight delay forecast
 
 ---
 
+## 📸 High-Resolution UI Showcase & Previews
+
+### 1. 🎯 Flight Operational Parameters & Explainable Risk Attribution
+![Flighora Predictor Dashboard](docs/images/predictor_dashboard.png)
+
+### 2. 🤖 Flighora AI Assistant (Live Delay & Passenger Rights Specialist)
+![Flighora AI Assistant Chat](docs/images/ai_assistant_chat.png)
+
+### 3. 🗺️ Live Airspace Operations Radar (OpenStreetMap Telemetry)
+![Live Airspace Operations Radar](docs/images/live_airspace_radar.png)
+
+### 4. ⚠️ Global & Indian Airport Disruption Index
+![Airport Disruption Index](docs/images/airport_disruption_index.png)
+
+### 5. ✈️ "Everywhere" Flight Deal Generator
+![Everywhere Flight Deals](docs/images/everywhere_flight_deals.png)
+
+---
+
 ## 🌟 Key Features
 
 - **Multi-Task PyTorch Deep Neural Network**:
@@ -22,6 +41,13 @@ An AI-powered prediction and decision support platform for flight delay forecast
 ```
 flight-delay-analysis-system/
 ├── data/                       # Synthetic flight and weather dataset
+├── docs/                       # High-resolution documentation screenshots & assets
+│   └── images/
+│       ├── predictor_dashboard.png
+│       ├── ai_assistant_chat.png
+│       ├── live_airspace_radar.png
+│       ├── airport_disruption_index.png
+│       └── everywhere_flight_deals.png
 ├── models/                     # PyTorch model checkpoints, joblib scalers, metrics
 ├── src/
 │   ├── dataset_generator.py    # Synthetic flight & weather data generator
