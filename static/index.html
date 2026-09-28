@@ -177,43 +177,43 @@
         </div>
     </header>
 
-    <!-- FLIGHTAWARE HERO SECTION WITH CENTERED SEARCH BAR -->
-    <section class="fa-hero flex flex-col items-center justify-center text-center px-6 py-16 shadow-inner relative">
-        <div class="max-w-4xl mx-auto space-y-6">
-            <h1 class="text-4xl md:text-5xl font-normal text-white tracking-tight leading-tight">
-                Flighora<br/>
-                <span class="font-light opacity-95">is Central to Aviation</span>
-            </h1>
-            <p class="text-sm md:text-base text-slate-200 font-medium">
-                Know your flight before you fly — Predictive ATC Delay Intelligence & Statutory Refund Calculator
-            </p>
-
-            <!-- FlightAware Round Pill Search Bar -->
-            <form id="hero-search-form" onsubmit="triggerHeroSearch(event)" class="max-w-3xl mx-auto bg-white rounded-full p-2 shadow-2xl flex items-center border border-slate-200">
-                <div class="flex items-center flex-1 px-4">
-                    <i class="fa-solid fa-magnifying-glass text-slate-400 text-lg mr-3"></i>
-                    <input type="text" id="hero-quick-input" placeholder="Search for flight number (e.g. 6E-204), airline, or airport..." class="w-full text-slate-800 text-sm font-medium focus:outline-none bg-transparent">
-                </div>
-                <button type="submit" class="bg-sky-500 hover:bg-sky-600 text-white font-bold px-6 py-3 rounded-full text-xs transition-all shadow-md">
-                    Search Flight
-                </button>
-            </form>
-
-            <!-- Quick Presets -->
-            <div class="flex flex-wrap items-center justify-center gap-2 text-xs text-slate-300 pt-2">
-                <span class="opacity-80">Popular Searches:</span>
-                <button onclick="applyPreset('6E-204', 'IndiGo', 'HYD', 'DEL')" class="bg-slate-900/60 hover:bg-slate-900 text-sky-300 border border-slate-700 px-3 py-1 rounded-full font-mono transition-all">6E-204 (HYD→DEL)</button>
-                <button onclick="applyPreset('AI-101', 'Air India', 'BOM', 'DEL')" class="bg-slate-900/60 hover:bg-slate-900 text-sky-300 border border-slate-700 px-3 py-1 rounded-full font-mono transition-all">AI-101 (BOM→DEL)</button>
-                <button onclick="applyPreset('UK-815', 'Vistara', 'BLR', 'DEL')" class="bg-slate-900/60 hover:bg-slate-900 text-sky-300 border border-slate-700 px-3 py-1 rounded-full font-mono transition-all">UK-815 (BLR→DEL)</button>
-            </div>
-        </div>
-    </section>
-
     <!-- Main Container -->
     <main id="main-content" class="max-w-7xl mx-auto px-6 py-8 space-y-8">
 
-        <!-- TAB 1: FLIGHT DELAY RISK DASHBOARD -->
-        <section id="tab-predictor" class="space-y-8">
+        <!-- TAB 1: FLIGHT DELAY RISK DASHBOARD (FIRST SECTION) -->
+        <section id="tab-predictor" class="tab-section space-y-8">
+
+            <!-- FLIGHTAWARE HERO SECTION WITH CENTERED SEARCH BAR (ONLY IN FIRST SECTION) -->
+            <div class="fa-hero flex flex-col items-center justify-center text-center px-6 py-14 shadow-inner relative rounded-2xl mb-6">
+                <div class="max-w-4xl mx-auto space-y-6">
+                    <h1 class="text-4xl md:text-5xl font-normal text-white tracking-tight leading-tight">
+                        Flighora<br/>
+                        <span class="font-light opacity-95">is Central to Aviation</span>
+                    </h1>
+                    <p class="text-sm md:text-base text-slate-200 font-medium">
+                        Know your flight before you fly — Predictive ATC Delay Intelligence & Statutory Refund Calculator
+                    </p>
+
+                    <!-- FlightAware Round Pill Search Bar -->
+                    <form id="hero-search-form" onsubmit="triggerHeroSearch(event)" class="max-w-3xl mx-auto bg-white rounded-full p-2 shadow-2xl flex items-center border border-slate-200">
+                        <div class="flex items-center flex-1 px-4">
+                            <i class="fa-solid fa-magnifying-glass text-slate-400 text-lg mr-3"></i>
+                            <input type="text" id="hero-quick-input" placeholder="Search for flight number (e.g. 6E-204), airline, or airport..." class="w-full text-slate-800 text-sm font-medium focus:outline-none bg-transparent">
+                        </div>
+                        <button type="submit" class="bg-sky-500 hover:bg-sky-600 text-white font-bold px-6 py-3 rounded-full text-xs transition-all shadow-md">
+                            Search Flight
+                        </button>
+                    </form>
+
+                    <!-- Quick Presets -->
+                    <div class="flex flex-wrap items-center justify-center gap-2 text-xs text-slate-300 pt-2">
+                        <span class="opacity-80">Popular Searches:</span>
+                        <button onclick="applyPreset('6E-204', 'IndiGo', 'HYD', 'DEL')" class="bg-slate-900/60 hover:bg-slate-900 text-sky-300 border border-slate-700 px-3 py-1 rounded-full font-mono transition-all">6E-204 (HYD→DEL)</button>
+                        <button onclick="applyPreset('AI-101', 'Air India', 'BOM', 'DEL')" class="bg-slate-900/60 hover:bg-slate-900 text-sky-300 border border-slate-700 px-3 py-1 rounded-full font-mono transition-all">AI-101 (BOM→DEL)</button>
+                        <button onclick="applyPreset('UK-815', 'Vistara', 'BLR', 'DEL')" class="bg-slate-900/60 hover:bg-slate-900 text-sky-300 border border-slate-700 px-3 py-1 rounded-full font-mono transition-all">UK-815 (BLR→DEL)</button>
+                    </div>
+                </div>
+            </div>
 
             <!-- DETAILED FLIGHT PARAMETER FORM -->
             <div class="corp-card p-6 bg-white border border-slate-200">
